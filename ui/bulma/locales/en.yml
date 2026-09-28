@@ -1,0 +1,36 @@
+en:
+  esalink_ui:
+    title: "EsaLink accredited platform"
+    note: "The password, API key and tokens are encrypted in the database and never displayed again. Once connected, EsaLink becomes the accredited platform for e-invoicing: transmissions, receptions and statuses are followed in the e-invoicing screens."
+    status:
+      title: "Connection status"
+      connected: "EsaLink is connected."
+      none: "EsaLink is not connected: enter your credentials below."
+      disconnected: "EsaLink is disconnected; its settings remain saved."
+      other_adapter: "Another platform (%{adapter}) is currently connected; connecting to EsaLink will replace it."
+      preproduction_note: "Pre-production: exchanged invoices are fictitious and are not sent to the tax authorities."
+      environment: "Environment"
+      url: "API address"
+      username: "Username"
+      last_sync: "Last synchronisation"
+      never_synced: "Never synchronised"
+    connect:
+      title: "Connect"
+      change: "Change the connection"
+      help: "Enter the username and password of your EsaLink access (provided by EsaLink or by a PDP Libre member reseller). They are tried against EsaLink before being saved."
+      secret_stored: "Saved — leave empty to keep it"
+      api_key_help: "Optional: fill it in if EsaLink gave you one."
+      urls: "API addresses"
+      production_help: "Required in production: the address provided by EsaLink."
+      directory_help: "Optional: XP Z12-013 Directory API, if EsaLink offers it."
+    deviations:
+      title: "Deviations from the XP Z12-013 standard"
+      help: "The EsaLink API follows the standard's Flow API; these deviations are handled by the adapter."
+    actions:
+      connect: "Test and connect"
+      check: "Test the connection"
+      disconnect: "Disconnect"
+    flash:
+      connected: "EsaLink is connected (%{mode})."
+      checked: "EsaLink responds (%{mode}, %{url})."
+      disconnected: "EsaLink is disconnected."

@@ -1,0 +1,43 @@
+name: partiduo-esalink
+version: 0.1.0
+
+description: |
+  Extension ESALINK de Partiduo : adaptateur de la plateforme agréée
+  EsaLink (Hubtimize e-Invoicing) pour l'extension EINV (facturation
+  électronique, ADR-004 D2). Mince : l'API Flux XP Z12-013 est celle de
+  l'adaptateur d'EINV ; s'y ajoutent l'authentification par identifiant et
+  mot de passe sur /token, les adresses de préproduction et de production,
+  le contrôle de santé et les écarts constatés à la norme.
+
+authors:
+  - Philippe Nénert <it+claude.ai@aloli.fr>
+
+crystal: ">= 1.19.1"
+
+license: AGPL-3.0-or-later
+
+targets:
+  partiduo-esalink-manage:
+    main: manage.cr
+
+dependencies:
+  # Le cœur : registre, contrat Partiduo::Api.
+  partiduo:
+    path: ../partiduo-app
+  # La boîte « Justificatifs à traiter », dont EINV dépend.
+  partiduo-document:
+    path: ../partiduo-document
+  # L'extension EINV : adaptateur XP Z12-013 (Einvoicing::Connectors::Afnor).
+  partiduo-einvoicing:
+    path: ../partiduo-einvoicing
+  marten:
+    path: ../../marten
+
+development_dependencies:
+  # L'interface qui monte ui/bulma/ : nécessaire aux specs et à manage.cr ;
+  # la distribution l'apporte elle-même.
+  partiduo-ui-bulma:
+    path: ../partiduo-ui-bulma
+  ameba:
+    github: crystal-ameba/ameba
+    version: "~> 1.6"

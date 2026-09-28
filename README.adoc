@@ -1,0 +1,155 @@
+= partiduo-esalink — plateforme agréée EsaLink
+:toc: left
+:toc-title: Table des matières
+:icons: font
+
+*Partiduo* est le portage en Crystal de https://noalyss.eu[NOALYSS], logiciel
+libre de comptabilité créé et maintenu par *Dany De Bontridder*. Partiduo
+n'est pas un projet officiel NOALYSS.
+
+Ce dépôt est l'extension `ESALINK` de Partiduo : l'adaptateur de la
+plateforme agréée https://www.esalink.com[EsaLink] (Hubtimize e-Invoicing,
+plateforme retenue par l'association PDP Libre) pour l'extension `EINV`
+(`partiduo-einvoicing`, facturation électronique de la réforme française).
+L'extension amont de NOALYSS la plus proche, `peppol-connect`, parlait à un
+point d'accès qui n'est pas une plateforme agréée ; EINV la remplace.
+
+L'extension est *mince* (ADR-004 D2 révisé le 28 septembre 2026) : l'API
+d'orchestration d'EsaLink suit l'API Flux de la norme XP Z12-013, que
+l'adaptateur d'EINV (`Einvoicing::Connectors::Afnor`) sait déjà parler.
+`Esalink::Connector` en hérite et n'ajoute que ce qui est propre à EsaLink.
+
+La spécification est dans `../partiduo-docs/` : ADR-004 (D2, D6, D8),
+ADR-003 (contrat d'extension), ADR-005 D4 (interface d'une extension). Les
+décisions propres à ce dépôt sont consignées dans
+`../partiduo-app/DECISIONS.adoc` (préfixe `D-ESL-`), les blocages dans
+`../partiduo-app/BLOCAGES.adoc` (`B-ESL-`). Référence du contrat :
+link:doc/api/esalink.adoc[].
+
+L'usage de l'API d'EsaLink a été compris en lisant le module libre
+https://github.com/Webelys/pdpconnectfr[PDPConnectFR] de Dolibarr (GPL-3.0,
+`class/providers/EsalinkPDPProvider.class.php`) ; aucun code n'en est
+repris.
+
+== Fonctions
+
+[cols="1,3",options="header"]
+|===
+|Fonction |Dans ESALINK
+
+|Réutilisé d'EINV
+|API Flux XP Z12-013 : dépôt `POST /flows` (`multipart/form-data`,
+`flowInfo` avec `flowSyntax` Factur-X, `flowProfile`, `processingRule`,
+`trackingId`, `sha256`), recherche `POST /flows/search`, téléchargement
+`GET /flows/{flowId}?docType=Original`, statuts CDAR reçus et émis,
+e-reporting, annuaire (API Annuaire, si EsaLink la propose) ; identifiant
+`Request-Id` par requête ; secrets et jetons chiffrés ; TLS vérifié.
+
+|Authentification
+|Identifiant et mot de passe sur `POST /token` (JSON) ; jeton conservé
+chiffré jusqu'à son expiration (`expires_in`, sinon quinze minutes), puis
+redemandé ; un refus 401 le redemande une fois. Clé d'API facultative
+(en-tête `hubtimize-api-key`).
+
+|Environnements
+|Préproduction (`https://ppd.hubtimize.fr/api/orchestrator/v1/` par
+défaut, modifiable) et production (adresse à saisir, non publiée à ce
+jour) ; l'environnement choisi fixe le mode affiché (écran EsaLink et
+bandeau des écrans d'EINV).
+
+|Contrôle de santé
+|`GET /healthcheck` (authentifié), à l'enregistrement des identifiants
+(essayés avant d'être enregistrés) et par « Tester la connexion ».
+
+|Écarts à la norme
+|Voir la table ci-dessous ; affichés aussi sur l'écran de raccordement.
+
+|Interface
+|`ui/bulma/`, montée sous `/ext/ESALINK/` : identifiants, environnement,
+adresses, test de connexion, déconnexion.
+|===
+
+=== Écarts constatés à la norme XP Z12-013
+
+[cols="1,3",options="header"]
+|===
+|Écart |Prise en charge
+
+|`token_password` |Jeton par identifiant et mot de passe (`POST /token` en JSON) au lieu d'OAuth 2 _client credentials_.
+|`api_key_header` |En-tête propre `hubtimize-api-key`, envoyé s'il est renseigné.
+|`request_id_query` |`Request-Id` attendu en paramètre d'adresse : envoyé en paramètre *et* en en-tête.
+|`download_accept` |Téléchargement d'un flux en `application/octet-stream` : demandé ainsi.
+|`search_without_cursor` |Recherche sans `nextCursor`, avec `total` : pages lues par date de mise à jour après le dernier flux lu, 200 flux par page.
+|`no_refresh_token` |Aucune route de rafraîchissement : jeton redemandé.
+|`production_url` |Adresse de production non publiée : saisie obligatoire en production.
+|===
+
+Ces écarts viennent de la lecture de PDPConnectFR, pas d'un essai contre
+EsaLink (BLOCAGES B-ESL-001).
+
+== Organisation
+
+[source]
+----
+src/partiduo-esalink.cr           # point d'entrée du shard (métier, sans interface)
+src/esalink/
+├── app.cr, manifest.cr           # application Marten `esalink` (libellés), manifeste ESALINK
+├── connector.cr                  # Esalink::Connector < Einvoicing::Connectors::Afnor
+├── api/                          # contrat public Esalink::Api
+└── locales/                      # fr, en, nl
+ui/bulma/                         # interface Bulma (Esalink::Ui), ADR-005 D4
+spec/support/esalink_platform.cr  # EsaLink simulée (devant l'API Flux simulée d'EINV)
+spec/integration/                 # suite facultative contre la préproduction réelle
+----
+
+L'extension n'a ni table ni migration : son raccordement est la ligne
+`ESALINK` de `einvoicing_connection`.
+
+== Composition dans une distribution
+
+[source,crystal]
+----
+require "partiduo-ui-bulma/partiduo_ui"
+require "partiduo-esalink"
+require "partiduo-document/ui/bulma"
+require "partiduo-einvoicing/ui/bulma"
+require "partiduo-esalink/ui/bulma"
+
+Marten.configure do |config|
+  config.installed_apps = config.installed_apps + Document::INSTALLED_APPS + Document::Ui::INSTALLED_APPS +
+                          Einvoicing::INSTALLED_APPS + Einvoicing::Ui::INSTALLED_APPS +
+                          Esalink::INSTALLED_APPS + Esalink::Ui::INSTALLED_APPS
+end
+----
+
+Les secrets et jetons sont chiffrés par EINV (`PARTIDUO_EINVOICING_KEY`,
+sinon dérivée de `MARTEN_SECRET_KEY`).
+
+== Commandes
+
+[source,sh]
+----
+cd prod-crystal/partiduo/partiduo-esalink
+SKIP_MARTEN_CLI_PRECOMPILATION=1 shards install
+createdb --encoding=UTF8 partiduo_test_<agent>
+DATABASE_URL='postgres:///partiduo_test_<agent>?host=/tmp' crystal spec
+crystal tool format src spec ui config scripts manage.cr && bin/ameba
+----
+
+Les specs tournent contre une EsaLink simulée
+(`spec/support/esalink_platform.cr`) qui reproduit l'API telle que la décrit
+PDPConnectFR, devant l'API Flux simulée d'EINV.
+
+La suite d'intégration `spec/integration/preproduction_spec.cr` (lecture
+seule : jeton, santé, recherche) tourne contre la *vraie* préproduction
+quand des identifiants existent : `ESALINK_SANDBOX_USERNAME`,
+`ESALINK_SANDBOX_PASSWORD`, et facultatives `ESALINK_SANDBOX_API_KEY`,
+`ESALINK_SANDBOX_URL`, dans l'environnement ou dans
+`~/.config/partiduo/esalink-sandbox.env` (lignes `VAR=valeur`) ;
+`ESALINK_SANDBOX=off` la désactive. Ces secrets ne sont jamais affichés,
+journalisés ni versionnés. L'accès s'obtient auprès d'EsaLink ou d'un
+distributeur membre de PDP Libre.
+
+== Licence
+
+GNU Affero General Public License v3 ou ultérieure (voir `LICENSE`).

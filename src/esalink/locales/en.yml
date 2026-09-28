@@ -1,0 +1,37 @@
+en:
+  esalink:
+    module:
+      name: "EsaLink (accredited platform)"
+    permissions:
+      connection:
+        manage: "Connect the EsaLink accredited platform"
+    menu:
+      esalink: "EsaLink"
+    adapter: "EsaLink — Hubtimize (XP Z12-013 Flow API)"
+    modes:
+      sandbox: "Pre-production"
+      production: "Production"
+    deviations:
+      token_password: "Token obtained with a username and password (POST /token as JSON), not with OAuth 2 client credentials: the adapter requests a new token when it expires."
+      api_key_header: "Hubtimize-specific API key in the hubtimize-api-key header, sent when filled in."
+      request_id_query: "Request-Id expected as a URL parameter: the adapter sends it as a parameter and as a header."
+      download_accept: "A flow download is served as application/octet-stream: the adapter asks for it that way."
+      search_without_cursor: "Flow search without nextCursor, with a total: the next page is read after the last flow read, by update date."
+      no_refresh_token: "No token refresh route."
+      production_url: "Production address not published: to be entered when EsaLink provides it."
+    errors:
+      connection:
+        production_url: "Enter the production address provided by EsaLink."
+        failed: "EsaLink does not respond as expected: %{detail}"
+        missing: "EsaLink is not the connected platform."
+      transport:
+        no_production_url: "EsaLink production address not filled in"
+  einvoicing:
+    fields:
+      username: "Username"
+      password: "Password"
+      api_key: "API key (hubtimize-api-key)"
+      preproduction_url: "Pre-production address"
+      production_url: "Production address"
+    modes:
+      preproduction: "Pre-production"

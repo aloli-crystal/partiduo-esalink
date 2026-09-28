@@ -1,0 +1,37 @@
+nl:
+  esalink:
+    module:
+      name: "EsaLink (erkend platform)"
+    permissions:
+      connection:
+        manage: "Het erkende platform EsaLink koppelen"
+    menu:
+      esalink: "EsaLink"
+    adapter: "EsaLink — Hubtimize (Flow-API XP Z12-013)"
+    modes:
+      sandbox: "Pre-productie"
+      production: "Productie"
+    deviations:
+      token_password: "Token verkregen met gebruikersnaam en wachtwoord (POST /token in JSON), niet met OAuth 2 client credentials: de adapter vraagt een nieuw token aan wanneer het verloopt."
+      api_key_header: "Hubtimize-specifieke API-sleutel in de header hubtimize-api-key, verzonden indien ingevuld."
+      request_id_query: "Request-Id verwacht als URL-parameter: de adapter verzendt het als parameter en als header."
+      download_accept: "Het downloaden van een flow gebeurt in application/octet-stream: de adapter vraagt het zo op."
+      search_without_cursor: "Zoeken naar flows zonder nextCursor, met een totaal: de volgende pagina wordt gelezen na de laatst gelezen flow, op wijzigingsdatum."
+      no_refresh_token: "Geen route om het token te vernieuwen."
+      production_url: "Productieadres niet gepubliceerd: in te vullen wanneer EsaLink het meedeelt."
+    errors:
+      connection:
+        production_url: "Vul het productieadres in dat EsaLink heeft meegedeeld."
+        failed: "EsaLink antwoordt niet zoals verwacht: %{detail}"
+        missing: "EsaLink is niet het gekoppelde platform."
+      transport:
+        no_production_url: "productieadres van EsaLink niet ingevuld"
+  einvoicing:
+    fields:
+      username: "Gebruikersnaam"
+      password: "Wachtwoord"
+      api_key: "API-sleutel (hubtimize-api-key)"
+      preproduction_url: "Pre-productieadres"
+      production_url: "Productieadres"
+    modes:
+      preproduction: "Pre-productie"

@@ -1,0 +1,36 @@
+nl:
+  esalink_ui:
+    title: "Erkend platform EsaLink"
+    note: "Het wachtwoord, de API-sleutel en de tokens worden versleuteld in de database bewaard en nooit opnieuw getoond. Eenmaal gekoppeld wordt EsaLink het erkende platform voor elektronische facturatie: verzendingen, ontvangsten en statussen worden gevolgd in de schermen voor elektronische facturatie."
+    status:
+      title: "Status van de verbinding"
+      connected: "EsaLink is gekoppeld."
+      none: "EsaLink is niet gekoppeld: vul hieronder uw gegevens in."
+      disconnected: "EsaLink is losgekoppeld; de instellingen blijven bewaard."
+      other_adapter: "Een ander platform (%{adapter}) is momenteel gekoppeld; koppelen met EsaLink vervangt het."
+      preproduction_note: "Pre-productie: de uitgewisselde facturen zijn fictief en gaan niet naar de administratie."
+      environment: "Omgeving"
+      url: "Adres van de API"
+      username: "Gebruikersnaam"
+      last_sync: "Laatste synchronisatie"
+      never_synced: "Nooit gesynchroniseerd"
+    connect:
+      title: "Koppelen"
+      change: "Koppeling wijzigen"
+      help: "Vul de gebruikersnaam en het wachtwoord van uw EsaLink-toegang in (verstrekt door EsaLink of door een wederverkoper die lid is van PDP Libre). Ze worden bij EsaLink getest voordat ze worden bewaard."
+      secret_stored: "Bewaard — laat leeg om te behouden"
+      api_key_help: "Optioneel: vul in als EsaLink u er een heeft gegeven."
+      urls: "Adressen van de API"
+      production_help: "Verplicht in productie: het adres dat EsaLink heeft meegedeeld."
+      directory_help: "Optioneel: Directory-API XP Z12-013, als EsaLink die aanbiedt."
+    deviations:
+      title: "Vastgestelde afwijkingen van de norm XP Z12-013"
+      help: "De API van EsaLink volgt de Flow-API van de norm; deze afwijkingen worden door de adapter opgevangen."
+    actions:
+      connect: "Testen en koppelen"
+      check: "Verbinding testen"
+      disconnect: "Loskoppelen"
+    flash:
+      connected: "EsaLink is gekoppeld (%{mode})."
+      checked: "EsaLink antwoordt (%{mode}, %{url})."
+      disconnected: "EsaLink is losgekoppeld."

@@ -1,0 +1,91 @@
+{# SPDX-License-Identifier: AGPL-3.0-or-later. Raccordement à EsaLink (ADR-004 D2) : état de la connexion avec l'environnement (préproduction ou production) toujours affiché, test de connexion (jeton et contrôle de santé), déconnexion ; formulaire des identifiants (identifiant, mot de passe, clé d'API), de l'environnement et des adresses, essayés avant d'être enregistrés ; écarts constatés à la norme XP Z12-013. Les secrets ne sont jamais réaffichés. #}{% extend "ui/base.html" %}
+{% block title %}{{ title }}{% endblock title %}
+{% block crumbs %}{% include "ui/_crumbs.html" %}{% endblock crumbs %}
+{% block heading %}{{ title }} <span class="pd-ext">ESALINK</span>{% endblock heading %}
+{% block content %}
+{% if status.connected %}<div class="notification {% if status.mode == 'production' %}is-success{% else %}is-warning{% endif %} is-light pd-alert" role="status" data-esalink-connection>{% include "ui/_icon.html" with name="plug" %}<div>
+  <p><strong>{% translate "esalink_ui.status.connected" %}</strong> <span class="tag {% if status.mode == 'production' %}is-success{% else %}is-warning{% endif %}" data-esalink-mode="{{ status.environment }}">{{ status.environment_l }}</span></p>
+  {% if status.mode == 'sandbox' %}<p class="is-size-7">{% translate "esalink_ui.status.preproduction_note" %}</p>{% endif %}
+</div></div>
+{% else %}<div class="notification is-light pd-alert" role="status" data-esalink-connection>{% include "ui/_icon.html" with name="plug" %}<div><p>{% if status.configured %}{% translate "esalink_ui.status.disconnected" %}{% else %}{% translate "esalink_ui.status.none" %}{% endif %}</p>{% if status.other_adapter %}<p class="is-size-7">{% translate "esalink_ui.status.other_adapter" adapter: status.other_adapter %}</p>{% endif %}</div></div>{% endif %}
+{% if base %}<div class="notification is-danger is-light pd-alert" role="alert">{% include "ui/_icon.html" with name="triangle-alert" %}<div><p data-esalink-error>{{ base }}</p></div></div>{% endif %}
+
+{% if status.connected %}
+<section class="pd-panel" aria-labelledby="pd-esalink-state">
+  <header><h2 id="pd-esalink-state">{% translate "esalink_ui.status.title" %}</h2></header>
+  <div class="pd-body">
+    <dl class="pd-dl" data-esalink-state>
+      <dt>{% translate "esalink_ui.status.environment" %}</dt><dd>{{ status.environment_l }}</dd>
+      <dt>{% translate "esalink_ui.status.url" %}</dt><dd class="pd-mono">{{ status.effective_url }}</dd>
+      <dt>{% translate "esalink_ui.status.username" %}</dt><dd>{{ status.username }}</dd>
+      <dt>{% translate "esalink_ui.status.last_sync" %}</dt><dd>{% if status.last_sync %}{{ status.last_sync }}{% else %}{% translate "esalink_ui.status.never_synced" %}{% endif %}{% if status.last_error %} · <span class="has-text-danger">{{ status.last_error }}</span>{% endif %}</dd>
+    </dl>
+    <div class="buttons mt-3">
+      <form method="post" action="{% url 'esalink:check' %}">{% csrf_input %}<button class="button pd-touch" type="submit" data-esalink-check>{% include "ui/_icon.html" with name="shield-check" %}<span>{% translate "esalink_ui.actions.check" %}</span></button></form>
+      <form method="post" action="{% url 'esalink:disconnect' %}">{% csrf_input %}<button class="button is-danger is-light pd-touch" type="submit" data-esalink-disconnect>{% translate "esalink_ui.actions.disconnect" %}</button></form>
+    </div>
+  </div>
+</section>
+{% endif %}
+
+<section class="pd-panel" aria-labelledby="pd-esalink-form" data-esalink-form>
+  <header><h2 id="pd-esalink-form">{% if status.connected %}{% translate "esalink_ui.connect.change" %}{% else %}{% translate "esalink_ui.connect.title" %}{% endif %}</h2></header>
+  <div class="pd-body">
+    <p class="help mb-3">{% translate "esalink_ui.connect.help" %}</p>
+    <form method="post" action="{% url 'esalink:connect' %}" novalidate autocomplete="off">
+      {% csrf_input %}
+      <div class="field">
+        <label class="label" for="pd-esalink-environment">{% translate "einvoicing.fields.environment" %}</label>
+        <div class="select"><select id="pd-esalink-environment" name="environment">{% for item in environments %}<option value="{{ item.value }}"{% if item.selected %} selected{% endif %}>{{ item.label }}</option>{% endfor %}</select></div>
+        {% if errors.environment %}<p class="help is-danger">{{ errors.environment }}</p>{% endif %}
+      </div>
+      <div class="field">
+        <label class="label" for="pd-esalink-username">{% translate "einvoicing.fields.username" %}</label>
+        <input class="input" type="text" id="pd-esalink-username" name="username" value="{{ form.username }}" autocomplete="username"{% if errors.username %} aria-invalid="true"{% endif %}>
+        {% if errors.username %}<p class="help is-danger">{{ errors.username }}</p>{% endif %}
+      </div>
+      <div class="field">
+        <label class="label" for="pd-esalink-password">{% translate "einvoicing.fields.password" %}</label>
+        <input class="input" type="password" id="pd-esalink-password" name="password" value="" autocomplete="new-password" placeholder="{% if status.password_stored %}{% translate 'esalink_ui.connect.secret_stored' %}{% endif %}"{% if errors.password %} aria-invalid="true"{% endif %}>
+        {% if errors.password %}<p class="help is-danger">{{ errors.password }}</p>{% endif %}
+      </div>
+      <div class="field">
+        <label class="label" for="pd-esalink-api-key">{% translate "einvoicing.fields.api_key" %}</label>
+        <input class="input" type="password" id="pd-esalink-api-key" name="api_key" value="" autocomplete="off" placeholder="{% if status.api_key_stored %}{% translate 'esalink_ui.connect.secret_stored' %}{% endif %}"{% if errors.api_key %} aria-invalid="true"{% endif %}>
+        <p class="help">{% translate "esalink_ui.connect.api_key_help" %}</p>
+        {% if errors.api_key %}<p class="help is-danger">{{ errors.api_key }}</p>{% endif %}
+      </div>
+      <details class="mb-3"{% if errors.preproduction_url %} open{% endif %}{% if errors.production_url %} open{% endif %}{% if errors.directory_url %} open{% endif %}{% if form.environment == 'production' %} open{% endif %} data-esalink-urls>
+        <summary>{% translate "esalink_ui.connect.urls" %}</summary>
+        <div class="field mt-2">
+          <label class="label" for="pd-esalink-ppd">{% translate "einvoicing.fields.preproduction_url" %}</label>
+          <input class="input pd-mono" type="url" id="pd-esalink-ppd" name="preproduction_url" value="{{ form.preproduction_url }}" placeholder="{{ default_url }}"{% if errors.preproduction_url %} aria-invalid="true"{% endif %}>
+          {% if errors.preproduction_url %}<p class="help is-danger">{{ errors.preproduction_url }}</p>{% endif %}
+        </div>
+        <div class="field">
+          <label class="label" for="pd-esalink-prod">{% translate "einvoicing.fields.production_url" %}</label>
+          <input class="input pd-mono" type="url" id="pd-esalink-prod" name="production_url" value="{{ form.production_url }}"{% if errors.production_url %} aria-invalid="true"{% endif %}>
+          <p class="help">{% translate "esalink_ui.connect.production_help" %}</p>
+          {% if errors.production_url %}<p class="help is-danger">{{ errors.production_url }}</p>{% endif %}
+        </div>
+        <div class="field">
+          <label class="label" for="pd-esalink-directory">{% translate "einvoicing.fields.directory_url" %}</label>
+          <input class="input pd-mono" type="url" id="pd-esalink-directory" name="directory_url" value="{{ form.directory_url }}"{% if errors.directory_url %} aria-invalid="true"{% endif %}>
+          <p class="help">{% translate "esalink_ui.connect.directory_help" %}</p>
+          {% if errors.directory_url %}<p class="help is-danger">{{ errors.directory_url }}</p>{% endif %}
+        </div>
+      </details>
+      <button class="button is-primary pd-touch" type="submit">{% include "ui/_icon.html" with name="key-round" %}<span>{% translate "esalink_ui.actions.connect" %}</span></button>
+    </form>
+  </div>
+</section>
+
+<section class="pd-panel" aria-labelledby="pd-esalink-deviations">
+  <header><h2 id="pd-esalink-deviations">{% translate "esalink_ui.deviations.title" %}</h2></header>
+  <div class="pd-body">
+    <p class="help mb-2">{% translate "esalink_ui.deviations.help" %}</p>
+    <ul data-esalink-deviations>{% for item in deviations %}<li data-esalink-deviation="{{ item.code }}">{{ item.label }}</li>{% endfor %}</ul>
+  </div>
+</section>
+<p class="is-size-7 pd-muted">{% translate "esalink_ui.note" %}</p>
+{% endblock content %}

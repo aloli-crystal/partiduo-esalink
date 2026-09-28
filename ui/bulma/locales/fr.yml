@@ -1,0 +1,36 @@
+fr:
+  esalink_ui:
+    title: "Plateforme agréée EsaLink"
+    note: "Le mot de passe, la clé d'API et les jetons sont chiffrés en base et ne sont jamais réaffichés. Une fois raccordée, EsaLink devient la plateforme agréée de la facturation électronique : transmissions, réceptions et statuts se suivent dans les écrans de facturation électronique."
+    status:
+      title: "État de la connexion"
+      connected: "EsaLink est raccordé."
+      none: "EsaLink n'est pas raccordé : saisissez vos identifiants ci-dessous."
+      disconnected: "EsaLink est déconnecté ; ses paramètres restent enregistrés."
+      other_adapter: "Une autre plateforme (%{adapter}) est actuellement raccordée ; se raccorder à EsaLink la remplacera."
+      preproduction_note: "Préproduction : les factures échangées sont fictives et ne partent pas vers l'administration."
+      environment: "Environnement"
+      url: "Adresse de l'API"
+      username: "Identifiant"
+      last_sync: "Dernière synchronisation"
+      never_synced: "Jamais synchronisée"
+    connect:
+      title: "Se raccorder"
+      change: "Modifier le raccordement"
+      help: "Saisissez l'identifiant et le mot de passe de votre accès EsaLink (fournis par EsaLink ou par un distributeur membre de PDP Libre). Ils sont essayés auprès d'EsaLink avant d'être enregistrés."
+      secret_stored: "Enregistré — laissez vide pour le garder"
+      api_key_help: "Facultative : à renseigner si EsaLink vous en a remis une."
+      urls: "Adresses de l'API"
+      production_help: "Obligatoire en production : l'adresse communiquée par EsaLink."
+      directory_help: "Facultative : API Annuaire XP Z12-013, si EsaLink la propose."
+    deviations:
+      title: "Écarts constatés à la norme XP Z12-013"
+      help: "L'API d'EsaLink suit l'API Flux de la norme ; ces écarts sont pris en charge par l'adaptateur."
+    actions:
+      connect: "Tester et raccorder"
+      check: "Tester la connexion"
+      disconnect: "Déconnecter"
+    flash:
+      connected: "EsaLink est raccordé (%{mode})."
+      checked: "EsaLink répond (%{mode}, %{url})."
+      disconnected: "EsaLink est déconnecté."
