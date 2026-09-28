@@ -21,9 +21,14 @@ describe "Raccordement à EsaLink (ADR-004 D2)" do
     adapter.fields.map { |field| {field.name, field.secret, field.required} }.should eq([
       {"environment", false, true}, {"username", false, true}, {"password", true, true}, {"api_key", true, false},
       {"preproduction_url", false, false}, {"production_url", false, false}, {"directory_url", false, false},
+      {"token_url", false, false},
     ])
-    I18n.t("einvoicing.fields.password").should eq("Mot de passe")
-    I18n.t("einvoicing.modes.preproduction").should eq("Préproduction")
+    # Libellés dans l'espace de l'extension (D-ESL-005).
+    password = adapter.fields.find!(&.name.==("password"))
+    password.label_key.should eq("esalink.fields.password")
+    I18n.t(password.label_key).should eq("Mot de passe")
+    environment = adapter.fields.find!(&.name.==("environment"))
+    I18n.t(environment.choice_key("preproduction")).should eq("Préproduction")
   end
 
   it "n'est pas proposée à un dossier belge" do

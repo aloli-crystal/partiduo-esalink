@@ -19,7 +19,7 @@ module Esalink
 
     # `/ext/ESALINK/` : état du raccordement et formulaire de raccordement.
     class IndexHandler < Handler
-      FIELDS = %w[environment username password api_key preproduction_url production_url directory_url]
+      FIELDS = %w[environment username password api_key preproduction_url production_url directory_url token_url]
 
       def get
         show({} of String => Array(String))
@@ -31,7 +31,7 @@ module Esalink
         form = values || {
           "environment" => view.environment, "username" => view.username,
           "preproduction_url" => view.preproduction_url, "production_url" => view.production_url,
-          "directory_url" => view.directory_url,
+          "directory_url" => view.directory_url, "token_url" => view.token_url,
         }
         page("esalink/index.html", {
           "title"        => I18n.t("esalink_ui.title"),
@@ -57,7 +57,8 @@ module Esalink
         values = FIELDS.to_h { |name| {name, field(name)} }
         input = Api::ConnectionInput.new(environment: values["environment"], username: values["username"],
           password: values["password"], api_key: values["api_key"], preproduction_url: values["preproduction_url"],
-          production_url: values["production_url"], directory_url: values["directory_url"])
+          production_url: values["production_url"], directory_url: values["directory_url"],
+          token_url: values["token_url"])
         result = Api.connect(current.actor, input)
         if result.success?
           flash["success"] = I18n.t("esalink_ui.flash.connected", mode: I18n.t(result.value!.environment_key))

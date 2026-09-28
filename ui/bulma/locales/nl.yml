@@ -23,6 +23,9 @@ nl:
       urls: "Adressen van de API"
       production_help: "Verplicht in productie: het adres dat EsaLink heeft meegedeeld."
       directory_help: "Optioneel: Directory-API XP Z12-013, als EsaLink die aanbiedt."
+      token_help: "Optioneel: adres van POST /token als EsaLink het van het API-adres scheidt (standaard: API-adres gevolgd door token)."
+      reentry_help: "Bij een andere omgeving of een ander adres moet u het wachtwoord (en de API-sleutel) opnieuw invoeren: opgeslagen geheimen gaan nooit naar een nieuw adres."
+      forbidden: "Voor het opslaan of loskoppelen van de koppeling is ook de toestemming nodig om elektronische facturatie in te stellen."
     deviations:
       title: "Vastgestelde afwijkingen van de norm XP Z12-013"
       help: "De API van EsaLink volgt de Flow-API van de norm; deze afwijkingen worden door de adapter opgevangen."

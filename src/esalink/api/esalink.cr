@@ -40,7 +40,7 @@ module Esalink
       active = Connections.active
       connected = !!(active && active.adapter == ADAPTER)
       environment = settings.try(&.["environment"]).presence || "preproduction"
-      effective = settings ? (Connector.base_url(settings) rescue "") : PREPRODUCTION_URL
+      effective = settings ? effective_url(settings) : PREPRODUCTION_URL
       StatusView.new(
         connected: connected, configured: !row.nil?, other_adapter: active && !connected ? active.adapter : nil,
         environment: environment, mode: environment == "production" ? "production" : "sandbox",
@@ -50,8 +50,10 @@ module Esalink
         preproduction_url: settings.try(&.["preproduction_url"]) || "",
         production_url: settings.try(&.["production_url"]) || "",
         directory_url: settings.try(&.["directory_url"]) || "",
+        token_url: settings.try(&.["token_url"]) || "",
         effective_url: effective, last_sync_at: row.try(&.last_sync_at),
-        last_error: Einvoicing::ErrorText.translate(row.try(&.last_error) || ""))
+        last_error: Einvoicing::ErrorText.translate(row.try(&.last_error) || ""),
+        can_link: actor.can?(Einvoicing::Api::CONFIGURE))
     end
 
     # --- Raccordement ------------------------------------------------------------
@@ -60,13 +62,18 @@ module Esalink
     # contrôle de santé avec eux, puis les enregistre par
     # `Einvoicing::Api.configure` (secrets chiffrés) : EsaLink devient
     # l'adaptateur actif d'EINV. Un secret laissé vide garde la valeur
-    # enregistrée. Rien n'est enregistré si l'essai échoue.
+    # enregistrée, sauf si l'environnement ou une adresse change : les
+    # secrets enregistrés partiraient alors vers une adresse que celui qui
+    # les a saisis n'a pas choisie, il faut les saisir à nouveau (D-ESL-004).
+    # Rien n'est enregistré si l'essai échoue.
     def self.connect(actor : Actor, input : ConnectionInput) : Result(StatusView)
       authorize_linking!(actor)
-      adapter = Connections.adapter?(ADAPTER) || raise "adaptateur #{ADAPTER} non enregistré"
+      adapter = Connections.adapter?(ADAPTER)
+      return Result(StatusView).failure(FieldError.base("esalink.errors.connection.adapter_missing")) unless adapter
       existing = row
       values = input.values.transform_values(&.strip)
       errors = [] of FieldError
+      require_secrets_on_move(values, existing, errors)
       Connections.check(adapter, ADAPTER, values, existing, regime, errors)
       if values["environment"] == "production" && values["production_url"].empty?
         errors << FieldError.new("production_url", "esalink.errors.connection.production_url")
@@ -111,6 +118,33 @@ module Esalink
     end
 
     # --- Outils ------------------------------------------------------------------
+
+    # Paramètres qui décident où partent les secrets.
+    DESTINATION_FIELDS = %w[environment preproduction_url production_url directory_url token_url]
+
+    # Environnement ou adresse différents de ceux enregistrés : chaque
+    # secret enregistré laissé vide doit être saisi à nouveau. EINV le
+    # vérifie aussi pour une adresse nouvelle (écran générique) ; ceci couvre
+    # en plus le changement d'environnement et l'effacement d'une adresse.
+    private def self.require_secrets_on_move(values : Hash(String, String), existing : Einvoicing::Connection?,
+                                             errors : Array(FieldError)) : Nil
+      return if existing.nil?
+      settings = Connections.settings_of(existing)
+      moved = DESTINATION_FIELDS.any? { |name| (values[name]? || "") != (settings.values[name]? || "") }
+      return unless moved
+      Connector::FIELDS.select(&.secret).each do |field|
+        next if !(values[field.name]? || "").empty? || (settings.secrets[field.name]? || "").empty?
+        next if errors.any? { |error| error.field == field.name }
+        errors << FieldError.new(field.name, "esalink.errors.connection.secret_reentry")
+      end
+    end
+
+    # Adresse effective ; vide si elle manque (production sans adresse).
+    private def self.effective_url(settings : Connections::Settings) : String
+      Connector.base_url(settings)
+    rescue Einvoicing::ConnectorError
+      ""
+    end
 
     # Raccordement d'EsaLink enregistré (actif ou non).
     private def self.row : Einvoicing::Connection?

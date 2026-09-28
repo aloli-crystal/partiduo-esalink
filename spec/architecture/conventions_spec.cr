@@ -46,14 +46,25 @@ describe "Conventions de l'extension ESALINK" do
     dynamic = ["esalink.adapter"]
     %w[sandbox production].each { |code| dynamic << "esalink.modes.#{code}" }
     Esalink::Api::DEVIATIONS.each { |code| dynamic << "esalink.deviations.#{code}" }
-    Esalink::Api::ENVIRONMENTS.each { |code| dynamic << "einvoicing.modes.#{code}" }
-    Esalink::Connector::FIELDS.each { |field| dynamic << "einvoicing.fields.#{field.name}" }
+    Esalink::Api::ENVIRONMENTS.each { |code| dynamic << "esalink.environments.#{code}" }
+    Esalink::Connector::FIELDS.each { |field| dynamic << field.label_key }
     missing = Partiduo::LOCALES.flat_map do |locale|
       I18n.with_locale(locale) do
         (cited + dynamic).select { |key| I18n.t(key).includes?("missing") }.map { |key| "#{locale}:#{key}" }
       end
     end
     missing.should be_empty
+  end
+
+  it "n'écrit aucune clé dans l'espace d'une autre extension (D-ESL-005, ADR-006 D3)" do
+    Dir.glob(File.join(Esalink::SpecSupport::ROOT, "{src,ui}", "**", "locales", "*.yml")).each do |path|
+      roots = YAML.parse(File.read(path)).as_h.values.flat_map { |tree| tree.as_h.keys.map(&.as_s) }
+      roots.each { |root| %w[esalink esalink_ui].should contain(root) }
+    end
+    Esalink::Connector::FIELDS.each do |field|
+      field.label_key.should start_with("esalink.fields.")
+      field.choice_prefix.should eq("esalink.environments") if field.kind == "choice"
+    end
   end
 
   it "n'a ni table ni migration : son raccordement est celui d'EINV (ADR-003 D5)" do

@@ -33,15 +33,21 @@ Api::PREPRODUCTION_URL  # https://ppd.hubtimize.fr/api/orchestrator/v1/
 * `status` : état sans appel à la plateforme — `connected` (adaptateur
   actif d'EINV), `configured`, `other_adapter`, `environment`, `mode`
   (`sandbox` ou `production`), `username`, `password_stored`,
-  `api_key_stored`, adresses saisies, `effective_url`, `last_sync_at`,
-  `last_error` (traduit). `environment_key` : libellé.
+  `api_key_stored`, adresses saisies (dont `token_url`), `effective_url`,
+  `last_sync_at`, `last_error` (traduit), `can_link` (l'acteur a
+  `einvoicing.settings.manage` : peut enregistrer ou débrancher).
+  `environment_key` : libellé (`esalink.environments.<code>`).
 * `connect` : contrôle des champs (ceux d'EINV : obligatoires, HTTPS,
   choix ; plus `esalink.errors.connection.production_url`), *essai* du jeton
   et du contrôle de santé avec les paramètres saisis (secrets enregistrés
-  repris s'ils sont laissés vides), puis `Einvoicing::Api.configure` :
+  repris s'ils sont laissés vides, *sauf* si l'environnement ou une adresse
+  change : `esalink.errors.connection.secret_reentry` sur chaque secret
+  enregistré laissé vide, sans appel à la plateforme), puis
+  `Einvoicing::Api.configure` :
   EsaLink devient l'adaptateur actif. Échec de l'essai :
   `esalink.errors.connection.failed` (`detail` traduit, jamais de secret) ;
-  rien n'est enregistré.
+  rien n'est enregistré. Adaptateur absent de la distribution :
+  `esalink.errors.connection.adapter_missing`.
 * `check` : jeton (redemandé s'il a expiré) et `GET /healthcheck` ; rend
   `mode`, `url`, `checked_at`. Pas raccordée :
   `esalink.errors.connection.missing`.
@@ -52,8 +58,12 @@ Api::PREPRODUCTION_URL  # https://ppd.hubtimize.fr/api/orchestrator/v1/
 Enregistré auprès d'EINV, régime `fr`. Paramètres : `environment`
 (`preproduction`, `production`), `username`, `password` (secret),
 `api_key` (secret, facultatif), `preproduction_url`, `production_url`,
-`directory_url` (facultatifs, HTTPS). `Esalink::Connector` hérite
+`directory_url`, `token_url` (facultatifs, HTTPS ; `token_url` par défaut
+`<adresse de l'API>token`). Libellés `esalink.fields.<nom>` et
+`esalink.environments.<code>` (`Connections::Field` `label:`,
+`choice_prefix:`). `Esalink::Connector` hérite
 d'`Einvoicing::Connectors::Afnor` et redéfinit ses points d'extension
 (`flow_url`, `platform_headers`, `request_url`, `download_accept`,
-`page_limit`, `more_without_cursor?`, `authenticate`) : voir
+`page_limit`, `more_without_cursor?`, `full_read_limit` — 5 000 —,
+`authenticate`) : voir
 `partiduo-einvoicing/doc/api/einvoicing.adoc`.

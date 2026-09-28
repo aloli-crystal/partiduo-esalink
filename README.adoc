@@ -49,7 +49,11 @@ e-reporting, annuaire (API Annuaire, si EsaLink la propose) ; identifiant
 |Identifiant et mot de passe sur `POST /token` (JSON) ; jeton conservé
 chiffré jusqu'à son expiration (`expires_in`, sinon quinze minutes), puis
 redemandé ; un refus 401 le redemande une fois. Clé d'API facultative
-(en-tête `hubtimize-api-key`).
+(en-tête `hubtimize-api-key`). Adresse d'authentification facultative
+(`token_url`, par défaut l'adresse de l'API suivie de `token`). Changer
+d'environnement ou d'adresse exige de saisir à nouveau le mot de passe et la
+clé d'API : les secrets enregistrés ne partent jamais vers une adresse
+nouvelle (D-ESL-004).
 
 |Environnements
 |Préproduction (`https://ppd.hubtimize.fr/api/orchestrator/v1/` par
@@ -66,7 +70,8 @@ bandeau des écrans d'EINV).
 
 |Interface
 |`ui/bulma/`, montée sous `/ext/ESALINK/` : identifiants, environnement,
-adresses, test de connexion, déconnexion.
+adresses, test de connexion, déconnexion (formulaire et déconnexion
+masqués sans `einvoicing.settings.manage`).
 |===
 
 === Écarts constatés à la norme XP Z12-013
@@ -79,7 +84,7 @@ adresses, test de connexion, déconnexion.
 |`api_key_header` |En-tête propre `hubtimize-api-key`, envoyé s'il est renseigné.
 |`request_id_query` |`Request-Id` attendu en paramètre d'adresse : envoyé en paramètre *et* en en-tête.
 |`download_accept` |Téléchargement d'un flux en `application/octet-stream` : demandé ainsi.
-|`search_without_cursor` |Recherche sans `nextCursor`, avec `total` : pages lues par date de mise à jour après le dernier flux lu, 200 flux par page.
+|`search_without_cursor` |Recherche sans `nextCursor`, avec `total`, ordre non garanti : page de 200 flux ; si `total` la dépasse, relecture d'un seul appel avec `limit = total` (jusqu'à 5 000 flux) puis tri par `updatedAt` ; au-delà, pages par date avec une seconde de recul (D-ESL-002).
 |`no_refresh_token` |Aucune route de rafraîchissement : jeton redemandé.
 |`production_url` |Adresse de production non publiée : saisie obligatoire en production.
 |===

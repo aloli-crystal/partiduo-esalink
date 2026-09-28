@@ -20,6 +20,8 @@ module Esalink
   # * adresses de préproduction (`https://ppd.hubtimize.fr/api/orchestrator/v1/`
   #   par défaut) et de production paramétrables, l'environnement choisi
   #   fixant le mode affiché ;
+  # * adresse d'authentification facultative (`token_url`, par défaut
+  #   `<adresse de l'API>token`) ;
   # * contrôle de santé `GET /healthcheck` (authentifié) ;
   # * écarts constatés à la norme (`DEVIATIONS`, DECISIONS D-ESL-003).
   #
@@ -34,7 +36,7 @@ module Esalink
     # Adresse de préproduction publiée (celle qu'utilise PDPConnectFR).
     PREPRODUCTION_URL = "https://ppd.hubtimize.fr/api/orchestrator/v1/"
 
-    # Environnements proposés ; libellés `einvoicing.modes.<code>`.
+    # Environnements proposés ; libellés `esalink.environments.<code>`.
     ENVIRONMENTS = %w[preproduction production]
 
     # En-tête de la clé d'API d'EsaLink.
@@ -45,6 +47,11 @@ module Esalink
     # les allers-retours.
     PAGE_LIMIT = 200
 
+    # Recherche incomplète relue d'un seul appel (`limit = total`) jusqu'à
+    # ce nombre de flux, comme PDPConnectFR : EsaLink ne garantit pas le tri
+    # par `updatedAt` (DECISIONS D-ESL-002).
+    FULL_READ_LIMIT = 5000
+
     # Durée de vie d'un jeton rendu sans `expires_in` (prudente).
     DEFAULT_TOKEN_LIFETIME = 15.minutes
 
@@ -54,14 +61,17 @@ module Esalink
     DEVIATIONS = %w[token_password api_key_header request_id_query download_accept search_without_cursor
       no_refresh_token production_url]
 
+    # Libellés `esalink.fields.<nom>` (DECISIONS D-ESL-005).
     FIELDS = [
-      Connections::Field.new("environment", kind: "choice", choices: ENVIRONMENTS),
-      Connections::Field.new("username"),
-      Connections::Field.new("password", secret: true),
-      Connections::Field.new("api_key", secret: true, required: false),
-      Connections::Field.new("preproduction_url", kind: "url", required: false),
-      Connections::Field.new("production_url", kind: "url", required: false),
-      Connections::Field.new("directory_url", kind: "url", required: false),
+      Connections::Field.new("environment", kind: "choice", choices: ENVIRONMENTS, label: "esalink.fields.environment",
+        choice_prefix: "esalink.environments"),
+      Connections::Field.new("username", label: "esalink.fields.username"),
+      Connections::Field.new("password", secret: true, label: "esalink.fields.password"),
+      Connections::Field.new("api_key", secret: true, required: false, label: "esalink.fields.api_key"),
+      Connections::Field.new("preproduction_url", kind: "url", required: false, label: "esalink.fields.preproduction_url"),
+      Connections::Field.new("production_url", kind: "url", required: false, label: "esalink.fields.production_url"),
+      Connections::Field.new("directory_url", kind: "url", required: false, label: "esalink.fields.directory_url"),
+      Connections::Field.new("token_url", kind: "url", required: false, label: "esalink.fields.token_url"),
     ]
 
     def self.adapter : Connections::Adapter
@@ -89,6 +99,18 @@ module Esalink
     # Adresse effective de l'API d'orchestration.
     def base_url : String
       Connector.base_url(settings)
+    end
+
+    # Adresse d'authentification : `token_url` si elle est renseignée,
+    # sinon `<adresse de l'API>token`. PDPConnectFR distingue les deux
+    # adresses (identiques en préproduction, inconnues en production) :
+    # hypothèse à vérifier au premier essai en production (B-ESL-001).
+    def self.token_url(settings : Connections::Settings) : String
+      settings["token_url"].presence || "#{base_url(settings)}token"
+    end
+
+    def token_url : String
+      Connector.token_url(settings)
     end
 
     # --- Points d'extension de l'adaptateur XP Z12-013 --------------------------
@@ -120,6 +142,10 @@ module Esalink
       PAGE_LIMIT
     end
 
+    protected def full_read_limit : Int32
+      FULL_READ_LIMIT
+    end
+
     # Pas de `nextCursor` : d'autres flux restent à lire si le `total`
     # annoncé dépasse la page, ou, sans `total`, si la page est pleine.
     protected def more_without_cursor?(body : JSON::Any, results : Array(JSON::Any)) : Bool
@@ -133,7 +159,7 @@ module Esalink
     protected def authenticate : String
       body = {"username" => settings["username"], "password" => settings["password"]}.to_json
       headers = {"Content-Type" => "application/json", "Accept" => "application/json"}.merge(platform_headers)
-      response = Http.exec("POST", "#{base_url}token", headers, body.to_slice)
+      response = Http.exec("POST", token_url, headers, body.to_slice)
       unless response.success?
         raise ConnectorError.new("authentification EsaLink refusée (#{response.status})", response.status,
           "einvoicing.errors.transport.auth_refused", {"status" => response.status.to_s})

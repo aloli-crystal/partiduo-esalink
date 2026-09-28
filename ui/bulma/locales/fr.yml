@@ -23,6 +23,9 @@ fr:
       urls: "Adresses de l'API"
       production_help: "Obligatoire en production : l'adresse communiquée par EsaLink."
       directory_help: "Facultative : API Annuaire XP Z12-013, si EsaLink la propose."
+      token_help: "Facultative : adresse de POST /token si EsaLink la sépare de l'adresse de l'API (par défaut : adresse de l'API suivie de token)."
+      reentry_help: "Changer d'environnement ou d'adresse oblige à saisir à nouveau le mot de passe (et la clé d'API) : les secrets enregistrés ne partent jamais vers une adresse nouvelle."
+      forbidden: "Enregistrer ou débrancher le raccordement exige aussi la permission de paramétrer la facturation électronique."
     deviations:
       title: "Écarts constatés à la norme XP Z12-013"
       help: "L'API d'EsaLink suit l'API Flux de la norme ; ces écarts sont pris en charge par l'adaptateur."

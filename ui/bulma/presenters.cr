@@ -48,13 +48,14 @@ module Esalink
           "effective_url"   => view.effective_url.presence,
           "last_sync"       => view.last_sync_at.try { |time| fmt.datetime(time) },
           "last_error"      => view.last_error.presence,
+          "can_link"        => view.can_link ? "1" : nil,
         })
       end
 
       # Environnements proposés, celui en cours sélectionné.
       def self.environments(selected : String) : Array(Row)
         Api::ENVIRONMENTS.map do |code|
-          Ui.row({"value" => code, "label" => I18n.t("einvoicing.modes.#{code}"), "selected" => code == selected ? "1" : nil})
+          Ui.row({"value" => code, "label" => I18n.t("esalink.environments.#{code}"), "selected" => code == selected ? "1" : nil})
         end
       end
 

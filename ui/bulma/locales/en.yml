@@ -23,6 +23,9 @@ en:
       urls: "API addresses"
       production_help: "Required in production: the address provided by EsaLink."
       directory_help: "Optional: XP Z12-013 Directory API, if EsaLink offers it."
+      token_help: "Optional: POST /token address if EsaLink separates it from the API address (default: API address followed by token)."
+      reentry_help: "Changing environment or address requires entering the password (and API key) again: stored secrets are never sent to a new address."
+      forbidden: "Saving or disconnecting the connection also requires the permission to configure electronic invoicing."
     deviations:
       title: "Deviations from the XP Z12-013 standard"
       help: "The EsaLink API follows the standard's Flow API; these deviations are handled by the adapter."

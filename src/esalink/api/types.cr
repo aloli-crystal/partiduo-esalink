@@ -6,7 +6,8 @@ module Esalink
     # (mot de passe, clé d'API) ne sont jamais rendus, seulement s'ils sont
     # enregistrés. `mode` : `sandbox` (préproduction) ou `production`,
     # affiché en permanence (ADR-004 D8). `other_adapter` : adaptateur d'une
-    # autre plateforme actuellement actif.
+    # autre plateforme actuellement actif. `can_link` : l'acteur peut
+    # enregistrer ou débrancher le raccordement (`einvoicing.settings.manage`).
     record StatusView,
       connected : Bool,
       configured : Bool,
@@ -19,12 +20,14 @@ module Esalink
       preproduction_url : String,
       production_url : String,
       directory_url : String,
+      token_url : String,
       effective_url : String,
       last_sync_at : Time?,
-      last_error : String do
+      last_error : String,
+      can_link : Bool do
       # Clé du libellé de l'environnement.
       def environment_key : String
-        "einvoicing.modes.#{environment}"
+        "esalink.environments.#{environment}"
       end
     end
 
@@ -38,11 +41,12 @@ module Esalink
       api_key : String = "",
       preproduction_url : String = "",
       production_url : String = "",
-      directory_url : String = "" do
+      directory_url : String = "",
+      token_url : String = "" do
       def values : Hash(String, String)
         {"environment" => environment, "username" => username, "password" => password, "api_key" => api_key,
          "preproduction_url" => preproduction_url, "production_url" => production_url,
-         "directory_url" => directory_url}
+         "directory_url" => directory_url, "token_url" => token_url}
       end
     end
 

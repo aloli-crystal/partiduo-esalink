@@ -4,6 +4,8 @@ en:
       name: "EsaLink (accredited platform)"
     permissions:
       connection:
+        adapter_missing: "The EsaLink adapter is not available in this distribution."
+        secret_reentry: "Environment or address changed: enter this secret again."
         manage: "Connect the EsaLink accredited platform"
     menu:
       esalink: "EsaLink"
@@ -16,22 +18,27 @@ en:
       api_key_header: "Hubtimize-specific API key in the hubtimize-api-key header, sent when filled in."
       request_id_query: "Request-Id expected as a URL parameter: the adapter sends it as a parameter and as a header."
       download_accept: "A flow download is served as application/octet-stream: the adapter asks for it that way."
-      search_without_cursor: "Flow search without nextCursor, with a total: the next page is read after the last flow read, by update date."
+      search_without_cursor: "Flow search without nextCursor, with a total and no guaranteed order: the adapter reads the whole search again (limit = total, up to 5,000 flows) then sorts it by update date."
       no_refresh_token: "No token refresh route."
       production_url: "Production address not published: to be entered when EsaLink provides it."
-    errors:
-      connection:
-        production_url: "Enter the production address provided by EsaLink."
-        failed: "EsaLink does not respond as expected: %{detail}"
-        missing: "EsaLink is not the connected platform."
-      transport:
-        no_production_url: "EsaLink production address not filled in"
-  einvoicing:
     fields:
+      environment: "Environment"
       username: "Username"
       password: "Password"
       api_key: "API key (hubtimize-api-key)"
       preproduction_url: "Pre-production address"
       production_url: "Production address"
-    modes:
+      directory_url: "Directory API address"
+      token_url: "Authentication address (/token)"
+    environments:
       preproduction: "Pre-production"
+      production: "Production"
+    errors:
+      connection:
+        adapter_missing: "The EsaLink adapter is not available in this distribution."
+        secret_reentry: "Environment or address changed: enter this secret again."
+        production_url: "Enter the production address provided by EsaLink."
+        failed: "EsaLink does not respond as expected: %{detail}"
+        missing: "EsaLink is not the connected platform."
+      transport:
+        no_production_url: "EsaLink production address not filled in"

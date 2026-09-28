@@ -4,6 +4,8 @@ fr:
       name: "EsaLink (plateforme agréée)"
     permissions:
       connection:
+        adapter_missing: "L'adaptateur EsaLink n'est pas disponible dans cette distribution."
+        secret_reentry: "Environnement ou adresse modifiés : saisissez à nouveau ce secret."
         manage: "Raccorder la plateforme agréée EsaLink"
     menu:
       esalink: "EsaLink"
@@ -16,22 +18,27 @@ fr:
       api_key_header: "Clé d'API propre à Hubtimize dans l'en-tête hubtimize-api-key, envoyée si elle est renseignée."
       request_id_query: "Identifiant de requête Request-Id attendu en paramètre d'adresse : l'adaptateur l'envoie en paramètre et en en-tête."
       download_accept: "Téléchargement d'un flux servi en application/octet-stream : l'adaptateur le demande ainsi."
-      search_without_cursor: "Recherche de flux sans nextCursor, avec un total : la page suivante se lit après le dernier flux lu, par date de mise à jour."
+      search_without_cursor: "Recherche de flux sans nextCursor, avec un total et sans tri garanti : l'adaptateur relit la recherche en entier (limit = total, jusqu'à 5 000 flux) puis la trie par date de mise à jour."
       no_refresh_token: "Aucune route de rafraîchissement du jeton."
       production_url: "Adresse de production non publiée : à saisir quand EsaLink la communique."
-    errors:
-      connection:
-        production_url: "Indiquez l'adresse de production communiquée par EsaLink."
-        failed: "EsaLink ne répond pas comme attendu : %{detail}"
-        missing: "EsaLink n'est pas la plateforme raccordée."
-      transport:
-        no_production_url: "adresse de production d'EsaLink non renseignée"
-  einvoicing:
     fields:
+      environment: "Environnement"
       username: "Identifiant"
       password: "Mot de passe"
       api_key: "Clé d'API (hubtimize-api-key)"
       preproduction_url: "Adresse de préproduction"
       production_url: "Adresse de production"
-    modes:
+      directory_url: "Adresse de l'API Annuaire"
+      token_url: "Adresse d'authentification (/token)"
+    environments:
       preproduction: "Préproduction"
+      production: "Production"
+    errors:
+      connection:
+        adapter_missing: "L'adaptateur EsaLink n'est pas disponible dans cette distribution."
+        secret_reentry: "Environnement ou adresse modifiés : saisissez à nouveau ce secret."
+        production_url: "Indiquez l'adresse de production communiquée par EsaLink."
+        failed: "EsaLink ne répond pas comme attendu : %{detail}"
+        missing: "EsaLink n'est pas la plateforme raccordée."
+      transport:
+        no_production_url: "adresse de production d'EsaLink non renseignée"

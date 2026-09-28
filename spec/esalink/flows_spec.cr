@@ -52,16 +52,21 @@ describe "Flux EsaLink par l'adaptateur XP Z12-013 d'EINV (ADR-004 D2)" do
     Einvoicing::Reception.all.count.should eq(7)
     searches = flow_calls("/flows/search").map { |request| JSON.parse(String.new(request.body || Bytes.empty)) }
     incoming = searches.select { |body| body["where"]["flowType"].as_a.map(&.as_s) == ["SupplierInvoice"] }
-    # Trois flux par page : trois recherches, sans curseur, la suite après
-    # le dernier flux lu.
-    incoming.size.should eq(3)
+    # EsaLink simulée plafonne à trois flux par page : relecture complète
+    # demandée (limit = total), encore plafonnée, puis pages par date avec
+    # une seconde de recul, sans curseur (D-ESL-002).
     incoming.none? { |body| body["cursor"]? }.should be_true
     incoming[0]["where"]["updatedAfter"]?.should be_nil
-    incoming[1]["where"]["updatedAfter"].as_s.should eq(S.platform.flows[2].updated_at.to_rfc3339(fraction_digits: 3))
     incoming[0]["limit"].as_i.should eq(Esalink::Connector::PAGE_LIMIT)
+    incoming[1]["limit"].as_i.should eq(7)
+    incoming[2]["where"]["updatedAfter"].as_s.should eq((S.platform.flows[2].updated_at - 1.second).to_rfc3339(fraction_digits: 3))
+    incoming.size.should eq(5)
     # Téléchargements demandés en application/octet-stream.
     downloads = S.platform.calls.select { |request| request.method == "GET" && request.url.includes?("docType=Original") }
-    downloads.size.should eq(7)
+    # Le recul d'une seconde relit le dernier flux de chaque page (écarté
+    # par l'enregistrement idempotent) : sept flux distincts, neuf lectures.
+    downloads.map { |request| URI.parse(request.url).path }.uniq!.size.should eq(7)
+    downloads.size.should eq(9)
     downloads.all? { |request| request.headers["Accept"] == "application/octet-stream" }.should be_true
 
     EApi.synchronize(E.admin).value!.received.should eq(0)

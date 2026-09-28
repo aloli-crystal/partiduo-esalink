@@ -22,7 +22,7 @@
     </dl>
     <div class="buttons mt-3">
       <form method="post" action="{% url 'esalink:check' %}">{% csrf_input %}<button class="button pd-touch" type="submit" data-esalink-check>{% include "ui/_icon.html" with name="shield-check" %}<span>{% translate "esalink_ui.actions.check" %}</span></button></form>
-      <form method="post" action="{% url 'esalink:disconnect' %}">{% csrf_input %}<button class="button is-danger is-light pd-touch" type="submit" data-esalink-disconnect>{% translate "esalink_ui.actions.disconnect" %}</button></form>
+      {% if status.can_link %}<form method="post" action="{% url 'esalink:disconnect' %}">{% csrf_input %}<button class="button is-danger is-light pd-touch" type="submit" data-esalink-disconnect>{% translate "esalink_ui.actions.disconnect" %}</button></form>{% endif %}
     </div>
   </div>
 </section>
@@ -31,52 +31,63 @@
 <section class="pd-panel" aria-labelledby="pd-esalink-form" data-esalink-form>
   <header><h2 id="pd-esalink-form">{% if status.connected %}{% translate "esalink_ui.connect.change" %}{% else %}{% translate "esalink_ui.connect.title" %}{% endif %}</h2></header>
   <div class="pd-body">
+    {% if status.can_link %}
     <p class="help mb-3">{% translate "esalink_ui.connect.help" %}</p>
     <form method="post" action="{% url 'esalink:connect' %}" novalidate autocomplete="off">
       {% csrf_input %}
       <div class="field">
-        <label class="label" for="pd-esalink-environment">{% translate "einvoicing.fields.environment" %}</label>
+        <label class="label" for="pd-esalink-environment">{% translate "esalink.fields.environment" %}</label>
         <div class="select"><select id="pd-esalink-environment" name="environment">{% for item in environments %}<option value="{{ item.value }}"{% if item.selected %} selected{% endif %}>{{ item.label }}</option>{% endfor %}</select></div>
         {% if errors.environment %}<p class="help is-danger">{{ errors.environment }}</p>{% endif %}
       </div>
       <div class="field">
-        <label class="label" for="pd-esalink-username">{% translate "einvoicing.fields.username" %}</label>
+        <label class="label" for="pd-esalink-username">{% translate "esalink.fields.username" %}</label>
         <input class="input" type="text" id="pd-esalink-username" name="username" value="{{ form.username }}" autocomplete="username"{% if errors.username %} aria-invalid="true"{% endif %}>
         {% if errors.username %}<p class="help is-danger">{{ errors.username }}</p>{% endif %}
       </div>
       <div class="field">
-        <label class="label" for="pd-esalink-password">{% translate "einvoicing.fields.password" %}</label>
+        <label class="label" for="pd-esalink-password">{% translate "esalink.fields.password" %}</label>
         <input class="input" type="password" id="pd-esalink-password" name="password" value="" autocomplete="new-password" placeholder="{% if status.password_stored %}{% translate 'esalink_ui.connect.secret_stored' %}{% endif %}"{% if errors.password %} aria-invalid="true"{% endif %}>
         {% if errors.password %}<p class="help is-danger">{{ errors.password }}</p>{% endif %}
       </div>
       <div class="field">
-        <label class="label" for="pd-esalink-api-key">{% translate "einvoicing.fields.api_key" %}</label>
+        <label class="label" for="pd-esalink-api-key">{% translate "esalink.fields.api_key" %}</label>
         <input class="input" type="password" id="pd-esalink-api-key" name="api_key" value="" autocomplete="off" placeholder="{% if status.api_key_stored %}{% translate 'esalink_ui.connect.secret_stored' %}{% endif %}"{% if errors.api_key %} aria-invalid="true"{% endif %}>
         <p class="help">{% translate "esalink_ui.connect.api_key_help" %}</p>
         {% if errors.api_key %}<p class="help is-danger">{{ errors.api_key }}</p>{% endif %}
       </div>
-      <details class="mb-3"{% if errors.preproduction_url %} open{% endif %}{% if errors.production_url %} open{% endif %}{% if errors.directory_url %} open{% endif %}{% if form.environment == 'production' %} open{% endif %} data-esalink-urls>
+      <details class="mb-3"{% if errors.preproduction_url %} open{% endif %}{% if errors.production_url %} open{% endif %}{% if errors.directory_url %} open{% endif %}{% if errors.token_url %} open{% endif %}{% if form.environment == 'production' %} open{% endif %} data-esalink-urls>
         <summary>{% translate "esalink_ui.connect.urls" %}</summary>
         <div class="field mt-2">
-          <label class="label" for="pd-esalink-ppd">{% translate "einvoicing.fields.preproduction_url" %}</label>
+          <label class="label" for="pd-esalink-ppd">{% translate "esalink.fields.preproduction_url" %}</label>
           <input class="input pd-mono" type="url" id="pd-esalink-ppd" name="preproduction_url" value="{{ form.preproduction_url }}" placeholder="{{ default_url }}"{% if errors.preproduction_url %} aria-invalid="true"{% endif %}>
           {% if errors.preproduction_url %}<p class="help is-danger">{{ errors.preproduction_url }}</p>{% endif %}
         </div>
         <div class="field">
-          <label class="label" for="pd-esalink-prod">{% translate "einvoicing.fields.production_url" %}</label>
+          <label class="label" for="pd-esalink-prod">{% translate "esalink.fields.production_url" %}</label>
           <input class="input pd-mono" type="url" id="pd-esalink-prod" name="production_url" value="{{ form.production_url }}"{% if errors.production_url %} aria-invalid="true"{% endif %}>
           <p class="help">{% translate "esalink_ui.connect.production_help" %}</p>
           {% if errors.production_url %}<p class="help is-danger">{{ errors.production_url }}</p>{% endif %}
         </div>
         <div class="field">
-          <label class="label" for="pd-esalink-directory">{% translate "einvoicing.fields.directory_url" %}</label>
+          <label class="label" for="pd-esalink-directory">{% translate "esalink.fields.directory_url" %}</label>
           <input class="input pd-mono" type="url" id="pd-esalink-directory" name="directory_url" value="{{ form.directory_url }}"{% if errors.directory_url %} aria-invalid="true"{% endif %}>
           <p class="help">{% translate "esalink_ui.connect.directory_help" %}</p>
           {% if errors.directory_url %}<p class="help is-danger">{{ errors.directory_url }}</p>{% endif %}
         </div>
+        <div class="field">
+          <label class="label" for="pd-esalink-token">{% translate "esalink.fields.token_url" %}</label>
+          <input class="input pd-mono" type="url" id="pd-esalink-token" name="token_url" value="{{ form.token_url }}"{% if errors.token_url %} aria-invalid="true"{% endif %}>
+          <p class="help">{% translate "esalink_ui.connect.token_help" %}</p>
+          {% if errors.token_url %}<p class="help is-danger">{{ errors.token_url }}</p>{% endif %}
+        </div>
       </details>
+      <p class="help mb-3">{% translate "esalink_ui.connect.reentry_help" %}</p>
       <button class="button is-primary pd-touch" type="submit">{% include "ui/_icon.html" with name="key-round" %}<span>{% translate "esalink_ui.actions.connect" %}</span></button>
     </form>
+    {% else %}
+    <p class="help" data-esalink-no-link>{% translate "esalink_ui.connect.forbidden" %}</p>
+    {% endif %}
   </div>
 </section>
 
