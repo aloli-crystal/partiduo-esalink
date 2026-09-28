@@ -27,6 +27,15 @@ describe "Conventions de l'extension ESALINK" do
     missing.should be_empty
   end
 
+  it "ne mentionne le logiciel d'origine que dans les fichiers *.adoc et *.md" do
+    # Motif découpé pour que cette spec ne se trouve pas elle-même.
+    output = IO::Memory.new
+    status = Process.run("git", ["grep", "-il", "noa" + "lyss", "--", ".", ":!*.adoc", ":!*.md"],
+      chdir: Esalink::SpecSupport::ROOT, output: output, error: Process::Redirect::Close)
+    status.exit_code.should be < 2
+    output.to_s.lines.should be_empty
+  end
+
   it "a les mêmes clés de traduction en fr, en et nl" do
     %w[src/esalink/locales ui/bulma/locales].each do |dir|
       keys = Partiduo::LOCALES.to_h do |locale|

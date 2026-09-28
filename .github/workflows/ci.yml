@@ -27,6 +27,16 @@ jobs:
         run: scripts/ci-checkout-deps.sh
       - name: Format
         run: crystal tool format --check src ui spec config scripts manage.cr
+      - name: Aucune mention du logiciel d'origine hors *.adoc et *.md
+        # Motif découpé pour que cette étape ne se trouve pas elle-même.
+        # Code 1 = rien trouvé ; toute autre valeur (trouvé, erreur git) échoue.
+        run: |
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
+          rc=0; git grep -il "noa""lyss" -- . ':!*.adoc' ':!*.md' || rc=$?
+          if [ "$rc" -ne 1 ]; then
+            echo "Mention du logiciel d'origine interdite hors *.adoc et *.md (git grep : $rc)." >&2
+            exit 1
+          fi
       - name: Shards
         run: shards install
       - name: Ameba
