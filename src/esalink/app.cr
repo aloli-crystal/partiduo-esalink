@@ -12,7 +12,15 @@ require "./api/**"
 # `Esalink::Api` (raccordement, état, contrôle de santé), `locales/` les
 # libellés.
 module Esalink
-  VERSION = "0.1.0"
+  # Lue à la compilation dans `shard.yml`, seule source du numéro : chaque
+  # commit y incrémente le dernier chiffre.
+  VERSION = {{
+              (read_file("#{__DIR__}/../../shard.yml")
+                .lines
+                .find(&.starts_with?("version:")) || "version: 0.0.0")
+                .gsub(/^version:\s*/, "")
+                .chomp
+            }}
 
   # Code du registre (ADR-003 D2) : `esalink` dans `PARTIDUO_MODULES`.
   CODE = "ESALINK"
